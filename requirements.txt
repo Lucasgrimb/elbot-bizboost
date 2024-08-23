@@ -1,0 +1,15 @@
+flask
+python-dotenv
+openai
+aiohttp
+requests
+langchain 
+langchain-openai
+faiss-cpu 
+beautifulsoup4
+pypdf
+langchain-community
+pymupdf
+tiktoken
+openai 
+getpass4
