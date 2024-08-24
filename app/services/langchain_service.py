@@ -18,7 +18,7 @@ import shelve
 from openai import OpenAI
 from langchain.schema import Document
 from datetime import datetime, timedelta
-
+import json
 
 # Set up OpenAI API key
 def setup_openai_api():
@@ -31,70 +31,77 @@ def initialize_chat_model():
     return ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0.2)
 
 # Create chat history
+# def create_chat_history():
+#     print("Creating new chat history.")
+#     return ChatMessageHistory()
 def create_chat_history():
     print("Creating new chat history.")
-    return ChatMessageHistory()
+    history = ChatMessageHistory()
+    # Inicializa la historia del chat con un mensaje de saludo inicial o introducción al proyecto
+    history.add_message("system", "¡Hola! Soy Agustín, estoy aquí para ayudarte con todo lo relacionado al proyecto Bizboost.")
+    return history
 
-# Fetch JSON data from endpoint
+
 def fetch_json_data(url):
     print(f"Fetching JSON data from {url}")
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)  # Añadir un timeout para evitar que se quede colgado
         response.raise_for_status()
         print("Data fetched successfully.")
-        return response.json()
+        data = response.json()
+        if not data:
+            raise ValueError("No JSON data found at the endpoint.")
+        return data
     except requests.RequestException as e:
         print(f"Error fetching data: {e}")
         return None
+    except ValueError as ve:
+        print(f"Data error: {ve}")
+        return None
 
 # Process JSON data for RAG
+
 def process_json_data(json_data):
     if json_data is None:
         print("No JSON data available to process.")
         return None
 
     print("Processing JSON Data")
-    texts = []
-    for item in json_data:
-        texts.append(item['descripcion'])
-        for producto in item['productos']:
-            texts.append(producto['descripcion'])
-        for faq in item['preguntasFrecuentes']:
-            texts.append(faq['respuesta'])
-        for contacto in item['contactos']:
-            texts.append(contacto['nombre'] + ' ' + contacto['apellido'])
-        for ubicacion in item['ubicaciones']:
-            texts.append(ubicacion['ciudad'] + ', ' + ubicacion['pais'])
-        for respuesta in item['respuestasPredeterminadas']:
-            texts.append(respuesta['respuesta'])
-        for sistema in item['sistemas']:
-            texts.append(sistema['sistemasHerramientas'])
+    try:
+        json_string = json.dumps(json_data, ensure_ascii=False)
 
-    print("Splitting texts into smaller chunks.")
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    all_splits = text_splitter.create_documents(texts)
+        print("Splitting texts into smaller chunks.")
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        all_splits = text_splitter.create_documents([json_string])
 
-    print("Creating Embeddings and Vectorstore.")
-    embeddings = OpenAIEmbeddings()
-    vectorstore = FAISS.from_documents(documents=all_splits, embedding=embeddings)
-    retriever = vectorstore.as_retriever(k=4)
+        print("Creating Embeddings and Vectorstore.")
+        embeddings = OpenAIEmbeddings()
+        vectorstore = FAISS.from_documents(documents=all_splits, embedding=embeddings)
+        retriever = vectorstore.as_retriever(k=5)  # Aumentar k para más precisión
 
-    return retriever
+        return retriever
+    except Exception as e:
+        print(f"Error processing JSON data: {e}")
+        return None
 
 # Create prompt template with sales focus
 def create_prompt_template():
     print("Creating Prompt Template.")
     return ChatPromptTemplate.from_messages(
         [
-            ("system", " Sos un asistente virtual que sabe de todo sobre muchos temas. contestar segun lo que el usuario pida. siempre decir cosas reales no inventadas. como es una chat no hace falta que hables formal. Habla en castillano como un porteño. Y con mensajes no muy largos, siempre yendo al grano.  Vas a hablar con muchos adolecentes.   :\n\n{context}"),
+            ("system", "Sos Agustín, experto en el proyecto Bizboost. Ayudás a las PYMES a entender cómo Bizboost puede mejorar su negocio a través de la automatización de la prospección de clientes y la gestión de interacciones. Usá lenguaje simple y accesible, pero sé persuasivo y motivador. Si no podés responder a una consulta, redirigí la conversación a la funcionalidad principal del proyecto:"),
             MessagesPlaceholder(variable_name="messages"),
         ]
     )
-
 # Create retrieval chain
 def create_retrieval_chain(chat, prompt):
     print("Creating Retrieval Chain.")
-    return create_stuff_documents_chain(chat, prompt)
+    try:
+        # Mejor manejo de errores y asegurar que el prompt está bien formado
+        return create_stuff_documents_chain(chat, prompt)
+    except Exception as e:
+        print(f"Error creating retrieval chain: {e}")
+        return None
 
 # Create query transformation chain
 def create_query_transformation_chain(chat, retriever):
@@ -102,7 +109,7 @@ def create_query_transformation_chain(chat, retriever):
     query_transform_prompt = ChatPromptTemplate.from_messages(
         [
             MessagesPlaceholder(variable_name="messages"),
-            ("user", "Basado en la conversación anterior, genera una consulta de búsqueda para obtener información relevante para la conversación. Responde solo con la consulta, nada más."),
+            ("user", "Basado en la conversación anterior, genera una consulta precisa para recuperar la información más relevante sobre Bizboost."),
         ]
     )
 
@@ -121,7 +128,7 @@ def create_conversational_retrieval_chain(retriever_chain, retrieval_chain):
         context=retriever_chain,
     ).assign(
         answer=retrieval_chain,
-    )
+    ).with_config(run_name="conversational_retrieval_chain")
 
 # Local storage for chat threads using shelve
 def check_if_thread_exists(wa_id):
@@ -155,7 +162,7 @@ def run_chat(wa_id, name):
         store_thread(wa_id, chat_history)
 
     # Fetch and process JSON data
-    url = "https://bizboost.vercel.app/api/form"
+    url = "https://crescendoapi-pro.vercel.app/api/bizboost"
     json_data = fetch_json_data(url)
     retriever = process_json_data(json_data)
 
