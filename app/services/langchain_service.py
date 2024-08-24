@@ -37,8 +37,8 @@ def initialize_chat_model():
 def create_chat_history():
     print("Creating new chat history.")
     history = ChatMessageHistory()
-    # Inicializa la historia del chat con un mensaje de saludo inicial o introducción al proyecto
-    history.add_message("system", "¡Hola! Soy Agustín, estoy aquí para ayudarte con todo lo relacionado al proyecto Bizboost.")
+    # Añadir el mensaje en el formato correcto
+    history.add_message({"role": "system", "content": "¡Hola! Soy Agustín, estoy aquí para ayudarte con todo lo relacionado al proyecto Bizboost."})
     return history
 
 
