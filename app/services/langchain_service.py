@@ -19,6 +19,7 @@ from openai import OpenAI
 from langchain.schema import Document
 from datetime import datetime, timedelta
 import json
+from langchain.schema import Document
 
 # Set up OpenAI API key
 def setup_openai_api():
@@ -31,9 +32,6 @@ def initialize_chat_model():
     return ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0.2)
 
 # Create chat history
-# def create_chat_history():
-#     print("Creating new chat history.")
-#     return ChatMessageHistory()
 def create_chat_history():
     print("Creating new chat history.")
     history = ChatMessageHistory()
@@ -41,7 +39,7 @@ def create_chat_history():
     history.add_message({"role": "system", "content": "¡Hola! Soy Agustín, estoy aquí para ayudarte con todo lo relacionado al proyecto Bizboost."})
     return history
 
-
+# Fetch JSON data from endpoint
 def fetch_json_data(url):
     print(f"Fetching JSON data from {url}")
     try:
@@ -60,7 +58,6 @@ def fetch_json_data(url):
         return None
 
 # Process JSON data for RAG
-
 def process_json_data(json_data):
     if json_data is None:
         print("No JSON data available to process.")
@@ -68,37 +65,65 @@ def process_json_data(json_data):
 
     print("Processing JSON Data")
     try:
-        json_string = json.dumps(json_data, ensure_ascii=False)
+        # Función recursiva para extraer todos los valores del JSON como texto
+        def extract_text_from_json(data):
+            texts = []
 
-        print("Splitting texts into smaller chunks.")
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-        all_splits = text_splitter.create_documents([json_string])
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    texts.extend(extract_text_from_json(value))  # Recursividad para diccionarios
+            elif isinstance(data, list):
+                for item in data:
+                    texts.extend(extract_text_from_json(item))  # Recursividad para listas
+            else:
+                if isinstance(data, str):  # Solo agregamos strings
+                    print(f"Extracted text: {data}")  # Imprimir el valor extraído
+                    texts.append(data)
+                    
+            return texts
 
+        # Extraer todo el texto del JSON
+        texts = extract_text_from_json(json_data)
+        
+        # Crear documentos a partir de los textos extraídos
+        documents = [Document(page_content=text) for text in texts if text.strip()]
+
+        if not documents:
+            print("No valid text data found in the JSON.")
+            return None
+
+        print(f"Found {len(documents)} documents from the JSON.")
+
+        # Crear embeddings y el vectorstore
         print("Creating Embeddings and Vectorstore.")
         embeddings = OpenAIEmbeddings()
-        vectorstore = FAISS.from_documents(documents=all_splits, embedding=embeddings)
+        vectorstore = FAISS.from_documents(documents=documents, embedding=embeddings)
         retriever = vectorstore.as_retriever(k=5)  # Aumentar k para más precisión
 
         return retriever
     except Exception as e:
         print(f"Error processing JSON data: {e}")
         return None
-
+    
 # Create prompt template with sales focus
 def create_prompt_template():
     print("Creating Prompt Template.")
     return ChatPromptTemplate.from_messages(
         [
-            ("system", "Sos Agustín, experto en el proyecto Bizboost. Ayudás a las PYMES a entender cómo Bizboost puede mejorar su negocio a través de la automatización de la prospección de clientes y la gestión de interacciones. Usá lenguaje simple y accesible, pero sé persuasivo y motivador. Si no podés responder a una consulta, redirigí la conversación a la funcionalidad principal del proyecto:"),
+            ("system", "Sos Agustín, experto en el proyecto Bizboost. Ayudás a las PYMES a entender cómo Bizboost puede mejorar su negocio a través de la automatización de la prospección de clientes y la gestión de interacciones. Usá lenguaje simple y accesible, pero sé persuasivo y motivador. Si no podés responder a una consulta, redirigí la conversación a la funcionalidad principal del proyecto::\n\n{context}"),
             MessagesPlaceholder(variable_name="messages"),
         ]
     )
+
+
 # Create retrieval chain
 def create_retrieval_chain(chat, prompt):
     print("Creating Retrieval Chain.")
     try:
-        # Mejor manejo de errores y asegurar que el prompt está bien formado
-        return create_stuff_documents_chain(chat, prompt)
+        chain = create_stuff_documents_chain(chat, prompt)
+        if chain is None:
+            raise ValueError("The retrieval chain was not created successfully.")
+        return chain
     except Exception as e:
         print(f"Error creating retrieval chain: {e}")
         return None
@@ -106,29 +131,47 @@ def create_retrieval_chain(chat, prompt):
 # Create query transformation chain
 def create_query_transformation_chain(chat, retriever):
     print("Creating Query Transformation Chain.")
-    query_transform_prompt = ChatPromptTemplate.from_messages(
-        [
-            MessagesPlaceholder(variable_name="messages"),
-            ("user", "Basado en la conversación anterior, genera una consulta precisa para recuperar la información más relevante sobre Bizboost."),
-        ]
-    )
+    try:
+        query_transform_prompt = ChatPromptTemplate.from_messages(
+            [
+                MessagesPlaceholder(variable_name="messages"),
+                ("user", "Basado en la conversación anterior, genera una consulta precisa para recuperar la información más relevante sobre Bizboost."),
+            ]
+        )
 
-    return RunnableBranch(
-        (
-            lambda x: len(x.get("messages", [])) == 1,
-            (lambda x: x["messages"][-1].content) | retriever,
-        ),
-        query_transform_prompt | chat | StrOutputParser() | retriever,
-    ).with_config(run_name="chat_retriever_chain")
+        branch = RunnableBranch(
+            (
+                lambda x: len(x.get("messages", [])) == 1,
+                (lambda x: x["messages"][-1].content) | retriever,
+            ),
+            query_transform_prompt | chat | StrOutputParser() | retriever,
+        )
+
+        if branch is None:
+            raise ValueError("Query transformation chain was not created successfully.")
+
+        return branch
+    except Exception as e:
+        print(f"Error creating query transformation chain: {e}")
+        return None
 
 # Create conversational retrieval chain
 def create_conversational_retrieval_chain(retriever_chain, retrieval_chain):
     print("Creating Conversational Retrieval Chain.")
-    return RunnablePassthrough.assign(
-        context=retriever_chain,
-    ).assign(
-        answer=retrieval_chain,
-    ).with_config(run_name="conversational_retrieval_chain")
+    try:
+        if retriever_chain is None or retrieval_chain is None:
+            raise ValueError("One of the chains (retriever_chain or retrieval_chain) is None.")
+
+        conversational_chain = RunnablePassthrough.assign(
+            context=retriever_chain,
+        ).assign(
+            answer=retrieval_chain,
+        )
+
+        return conversational_chain.with_config(run_name="conversational_retrieval_chain")
+    except Exception as e:
+        print(f"Error creating conversational retrieval chain: {e}")
+        return None
 
 # Local storage for chat threads using shelve
 def check_if_thread_exists(wa_id):
@@ -161,6 +204,9 @@ def run_chat(wa_id, name):
         chat_history = create_chat_history()
         store_thread(wa_id, chat_history)
 
+    # Limitar el historial de chat a los últimos 5 mensajes relevantes
+    recent_messages = chat_history.messages[-5:]  # Últimos 5 mensajes
+
     # Fetch and process JSON data
     url = "https://crescendoapi-pro.vercel.app/api/bizboost"
     json_data = fetch_json_data(url)
@@ -176,22 +222,36 @@ def run_chat(wa_id, name):
     query_transforming_retriever_chain = create_query_transformation_chain(chat, retriever)
     conversational_retrieval_chain = create_conversational_retrieval_chain(query_transforming_retriever_chain, retrieval_chain)
 
+    if conversational_retrieval_chain is None:
+        print("Error creating conversational retrieval chain.")
+        return
+
     # The first message always comes from the user, so we directly get it from the history
-    user_input = chat_history.messages[-1].content
+    user_input = recent_messages[-1].content  # Usar solo el último mensaje del usuario
+
+    # Validación para evitar 'NoneType'
+    if user_input is None:
+        print("User input is None. Using empty string instead.")
+        user_input = ""
+
     print(f"User input: {user_input}")
 
     # Process the query and generate a response
     transformed_query = query_transforming_retriever_chain.invoke({
-        "messages": chat_history.messages
+        "messages": recent_messages
     })
 
     # Access the content of documents if transformed_query is a list of Documents
     if isinstance(transformed_query, list) and isinstance(transformed_query[0], Document):
         transformed_query = " ".join([doc.page_content for doc in transformed_query])
 
+    if transformed_query is None or not transformed_query.strip():
+        print("Transformed query is None or empty. Exiting.")
+        return
+
     print(f"Transformed query: {transformed_query}")
 
-    # Get relevant context
+    # Get relevant context dynamically based on the transformed query
     retrieved_context = retriever.get_relevant_documents(transformed_query)
     concatenated_context = " ".join([doc.page_content for doc in retrieved_context])
 
@@ -199,8 +259,8 @@ def run_chat(wa_id, name):
 
     # Create final prompt and send it to OpenAI
     prompt_to_send = {
-        "messages": chat_history.messages,
-        "context": concatenated_context
+        "messages": recent_messages,  # Enviar solo los últimos mensajes relevantes
+        "context": concatenated_context  # Contexto general basado en la consulta transformada
     }
 
     print(f"Prompt being sent to OpenAI: {prompt_to_send}")
