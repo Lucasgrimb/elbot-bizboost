@@ -50,6 +50,7 @@ def process_json_data(json_data):
     if json_data is None:
         print("No JSON data available to process.")
         return None
+        
 
     print("Processing JSON Data")
     try:
@@ -86,6 +87,8 @@ def process_json_data(json_data):
     except Exception as e:
         print(f"Error processing JSON data: {e}")
         return None
+
+
 
 # Create prompt template with sales focus
 def create_prompt_template(context):
