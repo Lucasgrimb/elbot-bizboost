@@ -1,23 +1,11 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.chains import create_history_aware_retriever, create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ChatMessageHistory
 import os
 import requests
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableBranch
 from dotenv import load_dotenv
 import logging
 import shelve
-from openai import OpenAI
-from langchain.schema import Document
-from datetime import datetime, timedelta
 import json
 from langchain.schema import Document
 
@@ -57,7 +45,7 @@ def fetch_json_data(url):
         print(f"Data error: {ve}")
         return None
 
-# Process JSON data for RAG
+# Process JSON data
 def process_json_data(json_data):
     if json_data is None:
         print("No JSON data available to process.")
@@ -85,93 +73,30 @@ def process_json_data(json_data):
         # Extraer todo el texto del JSON
         texts = extract_text_from_json(json_data)
         
-        # Crear documentos a partir de los textos extraídos
-        documents = [Document(page_content=text) for text in texts if text.strip()]
+        # Concatenar todos los textos en un solo string para usarlo como contexto
+        concatenated_text = "\n".join([text for text in texts if text.strip()])
 
-        if not documents:
+        if not concatenated_text:
             print("No valid text data found in the JSON.")
             return None
 
-        print(f"Found {len(documents)} documents from the JSON.")
+        print(f"Context size: {len(concatenated_text)} characters")
 
-        # Crear embeddings y el vectorstore
-        print("Creating Embeddings and Vectorstore.")
-        embeddings = OpenAIEmbeddings()
-        vectorstore = FAISS.from_documents(documents=documents, embedding=embeddings)
-        retriever = vectorstore.as_retriever(k=5)  # Aumentar k para más precisión
-
-        return retriever
+        return concatenated_text
     except Exception as e:
         print(f"Error processing JSON data: {e}")
         return None
-    
+
 # Create prompt template with sales focus
-def create_prompt_template():
+def create_prompt_template(context):
     print("Creating Prompt Template.")
     return ChatPromptTemplate.from_messages(
         [
-            ("system", "Sos Agustín, experto en el proyecto Bizboost. Ayudás a las PYMES a entender cómo Bizboost puede mejorar su negocio a través de la automatización de la prospección de clientes y la gestión de interacciones. Usá lenguaje simple y accesible, pero sé persuasivo y motivador. Si no podés responder a una consulta, redirigí la conversación a la funcionalidad principal del proyecto::\n\n{context}"),
+            ("system", "Sos Agustín, experto en el proyecto Bizboost. Ayudás a las PYMES a entender cómo Bizboost puede mejorar su negocio a través de la automatización de la prospección de clientes y la gestión de interacciones. Usá lenguaje simple y accesible, pero sé persuasivo y motivador. Si no podés responder a una consulta, redirigí la conversación a la funcionalidad principal del proyecto. Solo responder consultas con informacion presente en el contexto. No responder con textos demasiado largos."),
+            ("system", f"Contexto:\n{context}"),
             MessagesPlaceholder(variable_name="messages"),
         ]
     )
-
-
-# Create retrieval chain
-def create_retrieval_chain(chat, prompt):
-    print("Creating Retrieval Chain.")
-    try:
-        chain = create_stuff_documents_chain(chat, prompt)
-        if chain is None:
-            raise ValueError("The retrieval chain was not created successfully.")
-        return chain
-    except Exception as e:
-        print(f"Error creating retrieval chain: {e}")
-        return None
-
-# Create query transformation chain
-def create_query_transformation_chain(chat, retriever):
-    print("Creating Query Transformation Chain.")
-    try:
-        query_transform_prompt = ChatPromptTemplate.from_messages(
-            [
-                MessagesPlaceholder(variable_name="messages"),
-                ("user", "Basado en la conversación anterior, genera una consulta precisa para recuperar la información más relevante sobre Bizboost."),
-            ]
-        )
-
-        branch = RunnableBranch(
-            (
-                lambda x: len(x.get("messages", [])) == 1,
-                (lambda x: x["messages"][-1].content) | retriever,
-            ),
-            query_transform_prompt | chat | StrOutputParser() | retriever,
-        )
-
-        if branch is None:
-            raise ValueError("Query transformation chain was not created successfully.")
-
-        return branch
-    except Exception as e:
-        print(f"Error creating query transformation chain: {e}")
-        return None
-
-# Create conversational retrieval chain
-def create_conversational_retrieval_chain(retriever_chain, retrieval_chain):
-    print("Creating Conversational Retrieval Chain.")
-    try:
-        if retriever_chain is None or retrieval_chain is None:
-            raise ValueError("One of the chains (retriever_chain or retrieval_chain) is None.")
-
-        conversational_chain = RunnablePassthrough.assign(
-            context=retriever_chain,
-        ).assign(
-            answer=retrieval_chain,
-        )
-
-        return conversational_chain.with_config(run_name="conversational_retrieval_chain")
-    except Exception as e:
-        print(f"Error creating conversational retrieval chain: {e}")
-        return None
 
 # Local storage for chat threads using shelve
 def check_if_thread_exists(wa_id):
@@ -210,66 +135,23 @@ def run_chat(wa_id, name):
     # Fetch and process JSON data
     url = "https://crescendoapi-pro.vercel.app/api/bizboost"
     json_data = fetch_json_data(url)
-    retriever = process_json_data(json_data)
+    context = process_json_data(json_data)
 
-    if retriever is None:
-        print("No data available to process.")
+    if context is None:
+        print("No context available to process.")
         return
 
-    # Create the chains
-    prompt = create_prompt_template()
-    retrieval_chain = create_retrieval_chain(chat, prompt)
-    query_transforming_retriever_chain = create_query_transformation_chain(chat, retriever)
-    conversational_retrieval_chain = create_conversational_retrieval_chain(query_transforming_retriever_chain, retrieval_chain)
+    # Create the prompt with the full context
+    prompt = create_prompt_template(context)
+    
+    # Construir la lista de mensajes para enviar al modelo
+    prompt_messages = prompt.format_prompt(messages=recent_messages).to_messages()
 
-    if conversational_retrieval_chain is None:
-        print("Error creating conversational retrieval chain.")
-        return
-
-    # The first message always comes from the user, so we directly get it from the history
-    user_input = recent_messages[-1].content  # Usar solo el último mensaje del usuario
-
-    # Validación para evitar 'NoneType'
-    if user_input is None:
-        print("User input is None. Using empty string instead.")
-        user_input = ""
-
-    print(f"User input: {user_input}")
-
-    # Process the query and generate a response
-    transformed_query = query_transforming_retriever_chain.invoke({
-        "messages": recent_messages
-    })
-
-    # Access the content of documents if transformed_query is a list of Documents
-    if isinstance(transformed_query, list) and isinstance(transformed_query[0], Document):
-        transformed_query = " ".join([doc.page_content for doc in transformed_query])
-
-    if transformed_query is None or not transformed_query.strip():
-        print("Transformed query is None or empty. Exiting.")
-        return
-
-    print(f"Transformed query: {transformed_query}")
-
-    # Get relevant context dynamically based on the transformed query
-    retrieved_context = retriever.get_relevant_documents(transformed_query)
-    concatenated_context = " ".join([doc.page_content for doc in retrieved_context])
-
-    print(f"Retrieved context: {concatenated_context}")
-
-    # Create final prompt and send it to OpenAI
-    prompt_to_send = {
-        "messages": recent_messages,  # Enviar solo los últimos mensajes relevantes
-        "context": concatenated_context  # Contexto general basado en la consulta transformada
-    }
-
-    print(f"Prompt being sent to OpenAI: {prompt_to_send}")
-
-    # Generate the response using LangChain
-    response = conversational_retrieval_chain.invoke(prompt_to_send)
+    # Generate the response using the chat model
+    response = chat(prompt_messages)
 
     # Ensure the response is a string
-    new_message = response.get('answer', '')
+    new_message = response.content
     if not isinstance(new_message, str):
         new_message = str(new_message)
 
