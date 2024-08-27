@@ -13,3 +13,4 @@ pymupdf
 tiktoken
 openai 
 getpass4
+wsgiserver
