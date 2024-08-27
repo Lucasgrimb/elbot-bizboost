@@ -1,4 +1,4 @@
-#!/Users/lucasgrimberg/proyeqto/elbot/myenv/bin/python3.12
+#!/Users/lucasgrimberg/proyeqto/elbot-bizboost/myenv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys
