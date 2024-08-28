@@ -15,3 +15,4 @@ openai
 getpass4
 wsgiserver
 waitress
+redis
