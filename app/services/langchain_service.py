@@ -7,15 +7,13 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ChatMessageHistory
 import redis
-from langchain.schema import Document
-
-load_dotenv()
+from langchain.schema import HumanMessage, AIMessage
 
 # Set up Redis connection
 redis_client = redis.Redis(
-    host=os.getenv('REDIS_HOST'),
-    port=int(os.getenv('REDIS_PORT')),
-    password=os.getenv('REDIS_PASSWORD'),
+    host='redis-19468.c308.sa-east-1-1.ec2.redns.redis-cloud.com',  # Host de Redis
+    port=19468,  # Puerto de Redis
+    password='7a4cteGSD9iPbftOLGtoktsju5CoFGch',  # Contraseña de Redis
     db=0  # Base de datos Redis (por defecto 0)
 )
 
@@ -33,20 +31,25 @@ def initialize_chat_model():
 def create_chat_history():
     print("Creating new chat history.")
     history = ChatMessageHistory()
-    # Añadir el mensaje en el formato correcto
-    history.add_message({"role": "system", "content": "¡Hola! Soy Agustín, estoy aquí para ayudarte con todo lo relacionado al proyecto Bizboost."})
+    # Añadir el mensaje en el formato correcto utilizando HumanMessage
+    history.add_message(HumanMessage(role="system", content="¡Hola! Soy Agustín, estoy aquí para ayudarte con todo lo relacionado al proyecto Bizboost."))
     return history
 
 # Serialize chat history to JSON
 def serialize_chat_history(chat_history):
-    return json.dumps([{"role": m["role"], "content": m["content"]} for m in chat_history.messages])
+    return json.dumps([{"role": m.role, "content": m.content} for m in chat_history.messages])
 
 # Deserialize chat history from JSON
 def deserialize_chat_history(serialized_data):
     chat_history = ChatMessageHistory()
     messages = json.loads(serialized_data)
     for msg in messages:
-        chat_history.add_message({"role": msg["role"], "content": msg["content"]})
+        if msg["role"] == "user":
+            chat_history.add_message(HumanMessage(role=msg["role"], content=msg["content"]))
+        elif msg["role"] == "assistant":
+            chat_history.add_message(AIMessage(role=msg["role"], content=msg["content"]))
+        else:
+            chat_history.add_message(HumanMessage(role=msg["role"], content=msg["content"]))  # fallback para otros roles
     return chat_history
 
 # Fetch JSON data from endpoint
@@ -177,7 +180,7 @@ def run_chat(wa_id, name):
     print(f"Generated response: {new_message}")
 
     # Add the generated message to the chat history
-    chat_history.add_ai_message(new_message)
+    chat_history.add_message(AIMessage(role="assistant", content=new_message))
 
     # Store the updated chat history
     store_thread(wa_id, chat_history)
@@ -200,7 +203,7 @@ def generate_response(message_body, wa_id, name):
         logging.info(f"Retrieving existing thread for {name} with wa_id {wa_id}")
 
     # Add user message to chat history
-    chat_history.add_user_message(message_body)
+    chat_history.add_message(HumanMessage(role="user", content=message_body))
     print(f"User message added to history: {message_body}")
 
     # Store updated chat history before running chat
