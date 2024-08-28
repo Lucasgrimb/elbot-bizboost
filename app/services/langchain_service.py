@@ -152,8 +152,9 @@ def run_chat(wa_id, name):
         store_thread(wa_id, chat_history)
 
     # Limitar el historial de chat a los últimos 5 mensajes relevantes
-    recent_messages = chat_history.messages[-5:]  # Últimos 5 mensajes
-
+    recent_messages = chat_history.messages[-5:] 
+    print(recent_messages) # Últimos 5 mensajes
+    
     # Fetch and process JSON data
     url = "https://crescendoapi-pro.vercel.app/api/bizboost"
     json_data = fetch_json_data(url)
