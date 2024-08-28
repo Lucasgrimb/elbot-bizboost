@@ -1,13 +1,23 @@
+import logging
+import os
+import requests
+import json
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ChatMessageHistory
-import os
-import requests
-from dotenv import load_dotenv
-import logging
-import shelve
-import json
+import redis
 from langchain.schema import Document
+
+load_dotenv()
+
+# Set up Redis connection
+redis_client = redis.Redis(
+    host=os.getenv('REDIS_HOST'),
+    port=int(os.getenv('REDIS_PORT')),
+    password=os.getenv('REDIS_PASSWORD'),
+    db=0  # Base de datos Redis (por defecto 0)
+)
 
 # Set up OpenAI API key
 def setup_openai_api():
@@ -26,6 +36,18 @@ def create_chat_history():
     # Añadir el mensaje en el formato correcto
     history.add_message({"role": "system", "content": "¡Hola! Soy Agustín, estoy aquí para ayudarte con todo lo relacionado al proyecto Bizboost."})
     return history
+
+# Serialize chat history to JSON
+def serialize_chat_history(chat_history):
+    return json.dumps([{"role": m["role"], "content": m["content"]} for m in chat_history.messages])
+
+# Deserialize chat history from JSON
+def deserialize_chat_history(serialized_data):
+    chat_history = ChatMessageHistory()
+    messages = json.loads(serialized_data)
+    for msg in messages:
+        chat_history.add_message({"role": msg["role"], "content": msg["content"]})
+    return chat_history
 
 # Fetch JSON data from endpoint
 def fetch_json_data(url):
@@ -98,25 +120,22 @@ def create_prompt_template(context):
         ]
     )
 
-# Local storage for chat threads using shelve
+# Check if chat thread exists in Redis
 def check_if_thread_exists(wa_id):
     print(f"Checking if thread exists for wa_id: {wa_id}")
-    with shelve.open("threads_db") as threads_shelf:
-        chat_history = threads_shelf.get(wa_id, None)
-        if isinstance(chat_history, ChatMessageHistory):
-            print(f"Thread found for wa_id: {wa_id}")
-            return chat_history
-        else:
-            print(f"No thread found for wa_id: {wa_id}")
-            return None
+    serialized_data = redis_client.get(wa_id)
+    if serialized_data is not None:
+        print(f"Thread found for wa_id: {wa_id}")
+        return deserialize_chat_history(serialized_data)
+    else:
+        print(f"No thread found for wa_id: {wa_id}")
+        return None
 
+# Store chat thread in Redis
 def store_thread(wa_id, chat_history):
     print(f"Storing thread for wa_id: {wa_id}")
-    with shelve.open("threads_db", writeback=True) as threads_shelf:
-        if isinstance(chat_history, ChatMessageHistory):
-            threads_shelf[wa_id] = chat_history
-        else:
-            print("Error: Trying to store something that is not a ChatMessageHistory.")
+    serialized_data = serialize_chat_history(chat_history)
+    redis_client.set(wa_id, serialized_data)
 
 # Main function to handle chat
 def run_chat(wa_id, name):
