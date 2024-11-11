@@ -16,3 +16,4 @@ getpass4
 wsgiserver
 waitress
 redis
+psycopg2
