@@ -24,7 +24,7 @@ def setup_openai_api():
 # Initialize chat model
 def initialize_chat_model():
     print("Initializing Chat Model.")
-    return ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+    return ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0.2)
 
 # Create chat history
 def create_chat_history():
