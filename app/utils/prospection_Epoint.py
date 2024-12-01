@@ -1,3 +1,4 @@
+from flask import Blueprint, request, jsonify
 import os
 import json
 import serpapi
@@ -7,6 +8,8 @@ from langchain.schema import HumanMessage, SystemMessage
 
 # Cargar las variables de entorno desde .env
 load_dotenv()
+
+prospection_blueprint = Blueprint("prospection", __name__)
 
 def setup_chat_model():
     """
@@ -42,9 +45,6 @@ def interpretar_json(chat_model, json_data):
         # Generar respuesta usando el modelo
         response = chat_model.invoke(messages)
 
-        # Imprimir la respuesta bruta para depuración
-        #print("Respuesta bruta del modelo:", response.content)
-
         # Procesar la respuesta para limpiar los términos
         raw_terms = response.content.split("\n")  # Dividir por saltos de línea
         cleaned_terms = []
@@ -55,10 +55,6 @@ def interpretar_json(chat_model, json_data):
                 cleaned_term = term.split(". ", 1)[1].strip('"').strip()
                 cleaned_terms.append(cleaned_term)
 
-        # Imprimir términos limpios para depuración
-        print("Términos limpios:", cleaned_terms)
-
-        # Retornar la lista de términos limpios
         return cleaned_terms
 
     except Exception as e:
@@ -106,7 +102,7 @@ def search_google_maps(term, location="Buenos Aires"):
 def process_json():
     """
     Endpoint que recibe un JSON en el cuerpo de la solicitud POST,
-    genera términos de búsqueda y devuelve los resultados consolidados.
+    genera términos de búsqueda y devuelve los resultados consolidados en una lista plana.
     """
     try:
         # Cargar datos del JSON proporcionado en el POST
@@ -121,12 +117,12 @@ def process_json():
         # Generar términos de búsqueda usando el modelo
         search_terms = interpretar_json(chat_model, json_data)
 
-        # Consolidar todos los resultados en un solo JSON
-        all_results = {}
+        # Consolidar todos los resultados en una lista plana
+        all_results = []
         for term in search_terms:
             print(f"\nBuscando: {term} en Google Maps...")
             results = search_google_maps(term)
-            all_results[term] = results
+            all_results.extend(results)  # Agregar resultados directamente a la lista plana
 
             if results:
                 print(f"Resultados encontrados para '{term}':")
@@ -136,11 +132,11 @@ def process_json():
             else:
                 print(f"No se encontraron resultados para '{term}'.")
 
-        # Mostrar el JSON consolidado con los resultados
-        print("\nJSON consolidado con todos los resultados:")
+        # Mostrar el JSON consolidado con todos los resultados
+        print("\nLista consolidada con todos los resultados:")
         print(json.dumps(all_results, indent=4, ensure_ascii=False))
 
-        # Devolver el JSON consolidado como respuesta del endpoint
+        # Devolver la lista consolidada como respuesta del endpoint
         return jsonify(all_results), 200
 
     except Exception as e:
