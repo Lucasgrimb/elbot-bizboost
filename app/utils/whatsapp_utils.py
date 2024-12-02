@@ -122,3 +122,63 @@ def is_valid_whatsapp_message(body):
         and body["entry"][0]["changes"][0]["value"].get("messages")
         and body["entry"][0]["changes"][0]["value"]["messages"][0]
     )
+
+
+#Estas dos funciones sirven para enviar mensajes de WhatsApp a través de plantillas pre-aprobadas.
+def send_template_message(recipient, template_name, language_code="es", components=None):
+    """
+    Send a proactive WhatsApp message using a pre-approved template.
+
+    Args:
+        recipient (str): The WhatsApp ID of the recipient (e.g., phone number with country code).
+        template_name (str): The name of the approved WhatsApp template.
+        language_code (str): The language code of the template (default is 'es').
+        components (list): Components for the template placeholders (default is None).
+    """
+    headers = {
+        "Content-type": "application/json",
+        "Authorization": f"Bearer {current_app.config['ACCESS_TOKEN']}",
+    }
+
+    url = f"https://graph.facebook.com/{current_app.config['VERSION']}/{current_app.config['PHONE_NUMBER_ID']}/messages"
+
+    # Payload for the template message
+    data = {
+        "messaging_product": "whatsapp",
+        "to": recipient,
+        "type": "template",
+        "template": {
+            "name": template_name,
+            "language": {"code": language_code},
+        },
+    }
+
+    # Add components if provided
+    if components:
+        data["template"]["components"] = components
+
+    try:
+        response = requests.post(url, json=data, headers=headers, timeout=10)
+        response.raise_for_status()
+        logging.info(f"Template message sent to {recipient}.")
+        return response.json()
+    except requests.RequestException as e:
+        logging.error(f"Failed to send template message to {recipient}: {e}")
+        return None
+
+
+def initiate_conversations(recipients, template_name, language_code="es", components=None):
+    """
+    Initiate conversations with a list of recipients using a template.
+
+    Args:
+        recipients (list): List of WhatsApp IDs (e.g., phone numbers with country code).
+        template_name (str): The name of the approved WhatsApp template.
+        language_code (str): The language code of the template (default is 'es').
+        components (list): Components for the template placeholders (default is None).
+    """
+    for recipient in recipients:
+        logging.info(f"Sending template message to {recipient}.")
+        send_template_message(recipient, template_name, language_code, components)
+
+
