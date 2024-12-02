@@ -128,7 +128,8 @@ def process_json():
                 print(f"Resultados encontrados para '{term}':")
                 for business in results:
                     coords = business.get("coordinates", {})
-                    print(f"- Nombre: {business['name']}, Teléfono: {business['phone']}, Coordenadas: {coords}")
+                    email = business.get("email", "No disponible")
+                    print(f"- Nombre: {business['name']}, Teléfono: {business['phone']}, Coordenadas: {coords}, Correo: {email}")
             else:
                 print(f"No se encontraron resultados para '{term}'.")
 
