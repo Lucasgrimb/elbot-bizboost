@@ -91,12 +91,14 @@ def search_google_maps(term, location="Buenos Aires"):
         business = {
             "name": result.get("title"),
             "phone": result.get("phone"),
-            "coordinates": result.get("gps_coordinates", {})
+            "coordinates": result.get("gps_coordinates", {}),
+            "email": result.get("email")  # Intentar obtener el correo electrónico si está disponible
         }
-        if business["name"] and business["phone"]:
+        if business["name"] and (business["phone"] or business["email"]):
             businesses.append(business)
     
     return businesses
+
 
 @prospection_blueprint.route("/prospectar", methods=["POST"])
 def process_json():
