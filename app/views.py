@@ -1,6 +1,6 @@
 import logging
 import json
-
+from .utils.whatsapp_utils import send_template_message
 from flask import Blueprint, request, jsonify, current_app
 
 from .decorators.security import signature_required
@@ -85,5 +85,45 @@ def webhook_get():
 @signature_required
 def webhook_post():
     return handle_message()
+
+
+@send_template_blueprint.route("/send-messages", methods=["POST"])
+def send_messages():
+    """
+    API endpoint to send template messages to a list of phone numbers.
+
+    Expects a JSON payload with the following keys:
+        - phones: List of phone numbers (e.g., [{"telefono": "+54 9 11 5723-0597"}, ...])
+
+    Returns:
+        JSON response indicating success or failure.
+    """
+    try:
+        data = request.get_json()
+
+        # Validar estructura del JSON
+        phones = data.get("phones")
+        template_name = "template name"#agregar nombre template
+        components = "componentes"#agregar componentes
+
+        if not phones or not template_name:
+            return jsonify({"status": "error", "message": "Missing phones or template_name"}), 400
+
+        # Extraer y limpiar números de teléfono
+        recipients = [phone["telefono"].replace(" ", "").replace("-", "") for phone in phones if "telefono" in phone]
+
+        if not recipients:
+            return jsonify({"status": "error", "message": "No valid phone numbers provided"}), 400
+
+        # Enviar mensajes a cada número
+        for recipient in recipients:
+            logging.info(f"Sending template message to {recipient}.")
+            send_template_message(recipient, template_name, components=components)
+
+        return jsonify({"status": "success", "message": f"Messages sent to {len(recipients)} recipients"}), 200
+
+    except Exception as e:
+        logging.error(f"Error processing request: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 

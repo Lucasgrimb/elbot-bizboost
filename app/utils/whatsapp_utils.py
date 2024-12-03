@@ -124,7 +124,7 @@ def is_valid_whatsapp_message(body):
     )
 
 
-#Estas dos funciones sirven para enviar mensajes de WhatsApp a través de plantillas pre-aprobadas.
+
 def send_template_message(recipient, template_name, language_code="es", components=None):
     """
     Send a proactive WhatsApp message using a pre-approved template.
@@ -167,18 +167,5 @@ def send_template_message(recipient, template_name, language_code="es", componen
         return None
 
 
-def initiate_conversations(recipients, template_name, language_code="es", components=None):
-    """
-    Initiate conversations with a list of recipients using a template.
-
-    Args:
-        recipients (list): List of WhatsApp IDs (e.g., phone numbers with country code).
-        template_name (str): The name of the approved WhatsApp template.
-        language_code (str): The language code of the template (default is 'es').
-        components (list): Components for the template placeholders (default is None).
-    """
-    for recipient in recipients:
-        logging.info(f"Sending template message to {recipient}.")
-        send_template_message(recipient, template_name, language_code, components)
 
 

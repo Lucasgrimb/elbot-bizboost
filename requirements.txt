@@ -18,3 +18,4 @@ waitress
 redis
 psycopg2
 serpapi
+flask-cors
