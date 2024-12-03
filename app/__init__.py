@@ -14,7 +14,7 @@ def create_app():
     configure_logging()
 
     # Enable CORS
-    CORS(app, resources={r"/api/*": {"origins": "https://bizboost.vercel.app"}})
+    CORS(app, resources={r"/*": {"origins": "https://bizboost.vercel.app"}})
 
     # Register the blueprints
     app.register_blueprint(webhook_blueprint)
