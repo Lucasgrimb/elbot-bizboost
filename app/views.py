@@ -10,6 +10,8 @@ from .utils.whatsapp_utils import (
 )
 
 webhook_blueprint = Blueprint("webhook", __name__)
+send_template_blueprint = Blueprint("send_template", __name__)
+
 
 def handle_message():
     """
