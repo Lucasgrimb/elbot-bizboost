@@ -162,7 +162,7 @@ def run_chat(wa_id, name):
     print(recent_messages)
     
     # Fetch and process JSON data
-    url = "https://bizboost.vercel.app/api/form/cm0tug8q700002du6w5uu33o9"
+    url = "https://bizboost.vercel.app/api/form/cm48ymbpf0000c17vwdf77dxi"
     json_data = fetch_json_data(url)
     context = process_json_data(json_data)
 
