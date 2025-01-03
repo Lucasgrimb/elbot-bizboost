@@ -38,7 +38,7 @@ def interpretar_json(chat_model, json_data):
 
         # Crear los mensajes
         messages = [
-            SystemMessage(content="Eres un asistente experto en generación de leads. Genera términos concretos para buscar en Google Maps negocios b2b en Buenos Aires que podrían ser potenciales clientes del proyecto."),
+            SystemMessage(content="Eres un asistente experto en generación de leads. Genera términos concretos para buscar en Google Maps negocios en todo argentina que podrían ser potenciales clientes del proyecto."),
             HumanMessage(content=f"Analiza el siguiente JSON y genera una lista con al menos 10 términos claros para buscar en Google Maps. JSON: {json_text}")
         ]
 
