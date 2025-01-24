@@ -99,7 +99,7 @@ def process_whatsapp_message(body):
     message_id = message["id"]  # Message ID for marking as read
 
     # OpenAI Integration
-    response = generate_response(message_body, wa_id, name)
+    response = generate_response(message_body, wa_id, name)  # Agregar `await` aquí
     response = process_text_for_whatsapp(response)
 
     # Send the response message
@@ -108,6 +108,7 @@ def process_whatsapp_message(body):
 
     # Send the read receipt to mark the message as read
     send_read_receipt(message_id, wa_id)
+
 
 
 def is_valid_whatsapp_message(body):

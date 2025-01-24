@@ -39,14 +39,24 @@ def serialize_chat_history(chat_history):
 
 # Deserialize chat history from JSON
 def deserialize_chat_history(serialized_data):
+    if isinstance(serialized_data, list):
+        print("Data is already a list, skipping JSON deserialization.")
+        messages = serialized_data  # Si ya es lista, úsala directamente
+    elif isinstance(serialized_data, str):
+        print("Deserializing JSON string into list.")
+        messages = json.loads(serialized_data)  # Deserializar si es un JSON string
+    else:
+        raise ValueError("Invalid data type for serialized_data")
+    
     chat_history = ChatMessageHistory()
-    messages = json.loads(serialized_data)
     for msg in messages:
         if msg["role"] == "user":
             chat_history.add_message(HumanMessage(role=msg["role"], content=msg["content"]))
         elif msg["role"] == "assistant":
             chat_history.add_message(AIMessage(role=msg["role"], content=msg["content"]))
     return chat_history
+
+
 
 # Fetch JSON data from endpoint
 def fetch_json_data(url):
@@ -124,24 +134,25 @@ def check_if_thread_exists(wa_id):
     conn.close()
     
     if result:
-        print(f"Thread found for wa_id: {wa_id}")
         serialized_data = result[0]
+        print(f"Serialized data from DB: {serialized_data}, Type: {type(serialized_data)}")
         return deserialize_chat_history(serialized_data)
     else:
         print(f"No thread found for wa_id: {wa_id}")
         return None
 
+
 # Store chat thread in PostgreSQL
 def store_thread(wa_id, chat_history):
     print(f"Storing thread for wa_id: {wa_id}")
-    serialized_data = serialize_chat_history(chat_history)
+    serialized_data = serialize_chat_history(chat_history)  # JSON serializado
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO chat_history (wa_id, history)
         VALUES (%s, %s)
         ON CONFLICT (wa_id) DO UPDATE SET history = EXCLUDED.history
-    """, (wa_id, json.dumps(serialized_data)))
+    """, (wa_id, serialized_data))  # Almacena directamente el JSON serializado
     conn.commit()
     cursor.close()
     conn.close()
@@ -162,7 +173,7 @@ def run_chat(wa_id, name):
     print(recent_messages)
     
     # Fetch and process JSON data
-    url = "https://bizboost.vercel.app/api/form/cm0tug8q700002du6w5uu33o9"
+    url = "https://bizboost.vercel.app/api/form/cm48ymbpf0000c17vwdf77dxi"
     json_data = fetch_json_data(url)
     context = process_json_data(json_data)
 

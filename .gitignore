@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+venv/
 build/
 develop-eggs/
 dist/
@@ -24,8 +25,6 @@ var/
 *.egg
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -47,7 +46,7 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Django stuff
 *.log
 
 # Sphinx documentation
@@ -58,24 +57,21 @@ target/
 
 # DotEnv configuration
 .env
+.env.*
 myenv
 # Database
 *.db
+*.sqlite3
 *.rdb
 
-# Pycharm
-.idea
-
-# VS Code
+# IDEs and Editors
+.idea/
 .vscode/
 *.code-workspace
-
-# Spyder
 .spyproject/
 
 # Jupyter NB Checkpoints
 .ipynb_checkpoints/
-
 
 # Mac OS-specific storage files
 .DS_Store
@@ -87,5 +83,21 @@ myenv
 # Mypy cache
 .mypy_cache/
 
-# Exlcude the database file
-.db
+# Backups and temporary files
+*~
+*.orig
+*.tmp
+*.bak
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Security
+*.pem
+*.key
