@@ -9,6 +9,10 @@ app = create_app()
 def despertar():
     return "Hola desde mi ruta GET"
 
+@app.route("/")
+def home():
+    return "¡Hola, esta es la página principal de la aplicación!"
+
 if __name__ == "__main__":
     logging.info("Flask app started with Waitress")
     # Usar waitress en lugar de app.run()

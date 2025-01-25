@@ -6,8 +6,8 @@ import json  # Import the json module
 from app.services.langchain_bizboost import generate_response
 
 # URL for PostgreSQL connection (replace placeholders with your actual credentials)
-DB_URL = "postgresql://bizboost_postgre_user:9O5NXmVfO6fTGuDIEOSTPprfAmrKIp85@dpg-csmo8m88fa8c73a9gtp0-a.ohio-postgres.render.com/bizboost_postgre"
-
+#DB_URL = "postgresql://bizboost_postgre_user:9O5NXmVfO6fTGuDIEOSTPprfAmrKIp85@dpg-csmo8m88fa8c73a9gtp0-a.ohio-postgres.render.com/bizboost_postgre"
+DB_URL = "postgresql://postgres:fZuhFgnXiYzTHeTZwOahogIWXcaRFLqR@postgres.railway.internal:5432/railway"
 # Create the blueprint for the web chat API
 web_chat_blueprint = Blueprint("web_chat", __name__)
 

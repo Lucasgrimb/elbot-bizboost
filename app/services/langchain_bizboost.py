@@ -10,8 +10,8 @@ from langchain.memory import ChatMessageHistory
 from langchain.schema import HumanMessage, AIMessage
 
 # URL de conexión a PostgreSQL
-DB_URL = "postgresql://jelko_user:7JBd8Ni7HYAgIhuIY6F1CKWkCieZNDj5@dpg-ctn23opopnds73fjj1ig-a.ohio-postgres.render.com/jelko"
-
+#DB_URL = "postgresql://jelko_user:7JBd8Ni7HYAgIhuIY6F1CKWkCieZNDj5@dpg-ctn23opopnds73fjj1ig-a.ohio-postgres.render.com/jelko"
+DB_URL = "postgresql://postgres:fZuhFgnXiYzTHeTZwOahogIWXcaRFLqR@postgres.railway.internal:5432/railway"
 # Función para conectar a PostgreSQL
 def get_db_connection():
     return psycopg2.connect(DB_URL)
