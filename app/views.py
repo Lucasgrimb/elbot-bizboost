@@ -29,6 +29,10 @@ def handle_message():
     """
     body = request.get_json()
 
+    # Imprimir el JSON completo del cuerpo de la solicitud
+    logging.info(f"Received payload: {json.dumps(body, indent=2)}")
+    #print(f"Received payload: {json.dumps(body, indent=2)}")  # Esto se imprimirá en la consola
+
     # Check if it's a WhatsApp status update
     if (
         body.get("entry", [{}])[0]
@@ -52,6 +56,7 @@ def handle_message():
     except json.JSONDecodeError:
         logging.error("Failed to decode JSON")
         return jsonify({"status": "error", "message": "Invalid JSON provided"}), 400
+
 
 
 # Required webhook verification for WhatsApp

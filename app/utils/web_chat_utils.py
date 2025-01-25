@@ -3,7 +3,7 @@ import psycopg2
 from psycopg2.extras import Json  # Import for Json handling
 from flask import Blueprint, request, jsonify, make_response  # Added make_response here
 import json  # Import the json module
-from app.services.langchain_service import generate_response
+from app.services.langchain_bizboost import generate_response
 
 # URL for PostgreSQL connection (replace placeholders with your actual credentials)
 DB_URL = "postgresql://bizboost_postgre_user:9O5NXmVfO6fTGuDIEOSTPprfAmrKIp85@dpg-csmo8m88fa8c73a9gtp0-a.ohio-postgres.render.com/bizboost_postgre"

@@ -2,10 +2,13 @@ import logging
 from flask import current_app, jsonify
 import json
 import requests
-
-from app.services.langchain_service import generate_response
+import importlib
+#from app.services.langchain_service import generate_response
 import re
 
+PHONE_NUMBER_TO_MODULE = {
+    "5491151465950": "app.services.langchain_jelko",
+}
 
 def log_http_response(response):
     logging.info(f"Status: {response.status_code}")
@@ -90,24 +93,42 @@ def process_text_for_whatsapp(text):
     return whatsapp_style_text
 
 
+
+
 def process_whatsapp_message(body):
+    # Obtener el número del destinatario
+    phone_number = body["entry"][0]["changes"][0]["value"]["metadata"]["display_phone_number"]
+
+    # Buscar el módulo correspondiente al número de teléfono
+    module_name = PHONE_NUMBER_TO_MODULE.get(phone_number)
+    if not module_name:
+        logging.error(f"No module found for phone number: {phone_number}")
+        return
+
+    # Cargar dinámicamente el módulo
+    try:
+        company_module = importlib.import_module(module_name)
+    except ModuleNotFoundError:
+        logging.error(f"Module {module_name} not found for phone number: {phone_number}")
+        return
+
+    # Obtener la función generate_response del módulo
+    generate_response = getattr(company_module, "generate_response", None)
+    if not callable(generate_response):
+        logging.error(f"Function 'generate_response' not found in module {module_name}")
+        return
+
+    # Extraer datos del mensaje
     wa_id = body["entry"][0]["changes"][0]["value"]["contacts"][0]["wa_id"]
     name = body["entry"][0]["changes"][0]["value"]["contacts"][0]["profile"]["name"]
+    message = body["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"]
 
-    message = body["entry"][0]["changes"][0]["value"]["messages"][0]
-    message_body = message["text"]["body"]
-    message_id = message["id"]  # Message ID for marking as read
+    # Generar la respuesta
+    response = generate_response(message, wa_id, name)
 
-    # OpenAI Integration
-    response = generate_response(message_body, wa_id, name)  # Agregar `await` aquí
-    response = process_text_for_whatsapp(response)
-
-    # Send the response message
+    # Enviar la respuesta
     data = get_text_message_input(wa_id, response)
     send_message(data)
-
-    # Send the read receipt to mark the message as read
-    send_read_receipt(message_id, wa_id)
 
 
 
