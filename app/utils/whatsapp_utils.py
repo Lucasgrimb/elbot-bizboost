@@ -65,9 +65,9 @@ def send_read_receipt(message_id, wa_id):
     data = json.dumps(
         {
             "messaging_product": "whatsapp",
-            "status": "read",
-            "message_id": message_id,  # Message ID to mark as read
-            "to": wa_id  # WhatsApp ID of the recipient
+            "status": "read",  # Indica que el mensaje ha sido leído
+            "message_id": message_id,  # ID del mensaje recibido
+            "to": wa_id  # WhatsApp ID del remitente
         }
     )
 
@@ -80,6 +80,7 @@ def send_read_receipt(message_id, wa_id):
         logging.error(f"Request failed while sending read receipt due to: {e}")
     else:
         log_http_response(response)
+
 
 
 def process_text_for_whatsapp(text):
@@ -122,6 +123,10 @@ def process_whatsapp_message(body):
     wa_id = body["entry"][0]["changes"][0]["value"]["contacts"][0]["wa_id"]
     name = body["entry"][0]["changes"][0]["value"]["contacts"][0]["profile"]["name"]
     message = body["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"]
+    message_id = body["entry"][0]["changes"][0]["value"]["messages"][0]["id"]  # ID del mensaje
+
+    # Enviar recibo de lectura
+    send_read_receipt(message_id, wa_id)  # Llamada a la función para marcar el mensaje como leído
 
     # Generar la respuesta
     response = generate_response(message, wa_id, name)
@@ -129,6 +134,7 @@ def process_whatsapp_message(body):
     # Enviar la respuesta
     data = get_text_message_input(wa_id, response)
     send_message(data)
+
 
 
 

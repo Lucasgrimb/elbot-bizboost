@@ -13,6 +13,11 @@ webhook_blueprint = Blueprint("webhook", __name__)
 send_template_blueprint = Blueprint("send_template", __name__)
 
 
+from datetime import datetime, timezone
+import json
+from flask import request, jsonify
+import logging
+
 def handle_message():
     """
     Handle incoming webhook events from the WhatsApp API.
@@ -31,7 +36,6 @@ def handle_message():
 
     # Imprimir el JSON completo del cuerpo de la solicitud
     logging.info(f"Received payload: {json.dumps(body, indent=2)}")
-    #print(f"Received payload: {json.dumps(body, indent=2)}")  # Esto se imprimirá en la consola
 
     # Check if it's a WhatsApp status update
     if (
@@ -44,7 +48,16 @@ def handle_message():
         return jsonify({"status": "ok"}), 200
 
     try:
+        # Verificar si el mensaje es válido y su timestamp
         if is_valid_whatsapp_message(body):
+            message = body["entry"][0]["changes"][0]["value"]["messages"][0]
+            timestamp = int(message.get("timestamp", 0))
+            
+            # Verificar si el mensaje se envió hace más de una hora
+            if not is_recent_message(timestamp):
+                logging.warning("Message timestamp exceeds one hour. Ignoring message.")
+                return jsonify({"status": "ignored", "message": "Message too old."}), 200
+
             process_whatsapp_message(body)
             return jsonify({"status": "ok"}), 200
         else:
@@ -56,6 +69,23 @@ def handle_message():
     except json.JSONDecodeError:
         logging.error("Failed to decode JSON")
         return jsonify({"status": "error", "message": "Invalid JSON provided"}), 400
+
+def is_recent_message(timestamp):
+    """
+    Check if the timestamp is within the last hour.
+
+    Args:
+        timestamp (int): The epoch time of the message.
+
+    Returns:
+        bool: True if the message is recent, False otherwise.
+    """
+    current_time = datetime.now(timezone.utc).timestamp()
+    time_difference = current_time - timestamp
+
+    # 3600 seconds = 1 hour
+    return time_difference <= 3600
+
 
 
 
