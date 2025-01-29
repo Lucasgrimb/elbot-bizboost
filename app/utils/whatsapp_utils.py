@@ -7,7 +7,7 @@ import importlib
 import re
 
 PHONE_NUMBER_TO_MODULE = {
-    "5491151465950": "app.services.langchain_bizboost",
+    "5491151465950": "app.services.langchain_jelko",
     "5491136148233": "app.services.langchain_jelko",
 }
 
