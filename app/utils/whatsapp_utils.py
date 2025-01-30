@@ -123,18 +123,24 @@ def process_whatsapp_message(body):
     # Extraer datos del mensaje
     wa_id = body["entry"][0]["changes"][0]["value"]["contacts"][0]["wa_id"]
     name = body["entry"][0]["changes"][0]["value"]["contacts"][0]["profile"]["name"]
-    message = body["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"]
-    message_id = body["entry"][0]["changes"][0]["value"]["messages"][0]["id"]  # ID del mensaje
+    message_data = body["entry"][0]["changes"][0]["value"]["messages"][0]
+    message_id = message_data["id"]  # ID del mensaje
 
     # Enviar recibo de lectura
-    send_read_receipt(message_id, wa_id)  # Llamada a la función para marcar el mensaje como leído
+    send_read_receipt(message_id, wa_id)
 
-    # Generar la respuesta
-    response = generate_response(message, wa_id, name)
+    # Verificar si el mensaje es de audio
+    if message_data["type"] == "audio":
+        response_text = "¡Hola! Soy un asistente de ventas y, por el momento, no puedo escuchar audios. Pero estaré encantado de ayudarte si me escribes tu consulta en un mensaje de texto. ¡Espero tu mensaje! 💬"
+    else:
+        # Generar la respuesta normal
+        message = message_data["text"]["body"]
+        response_text = generate_response(message, wa_id, name)
 
     # Enviar la respuesta
-    data = get_text_message_input(wa_id, response)
+    data = get_text_message_input(wa_id, response_text)
     send_message(data)
+
 
 
 
