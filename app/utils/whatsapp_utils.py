@@ -131,7 +131,7 @@ def process_whatsapp_message(body):
 
     # Verificar si el mensaje es de audio
     if message_data["type"] == "audio":
-        response_text = "¡Hola! Soy un asistente de ventas y, por el momento, no puedo escuchar audios. Pero estaré encantado de ayudarte si me escribes tu consulta en un mensaje de texto. ¡Espero tu mensaje! 💬"
+        response_text = "Hola! Si podes haceme el favor de escribirme, no puedo escuchar audios."
     else:
         # Generar la respuesta normal
         message = message_data["text"]["body"]
