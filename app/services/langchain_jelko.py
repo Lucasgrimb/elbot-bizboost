@@ -10,8 +10,9 @@ from langchain.memory import ChatMessageHistory
 from langchain.schema import HumanMessage, AIMessage
 
 # URL de conexión a PostgreSQL
-#DB_URL = "postgresql://jelko_user:7JBd8Ni7HYAgIhuIY6F1CKWkCieZNDj5@dpg-ctn23opopnds73fjj1ig-a.ohio-postgres.render.com/jelko"
+# DB_URL = "postgresql://jelko_user:7JBd8Ni7HYAgIhuIY6F1CKWkCieZNDj5@dpg-ctn23opopnds73fjj1ig-a.ohio-postgres.render.com/jelko"
 DB_URL = "postgresql://postgres:fZuhFgnXiYzTHeTZwOahogIWXcaRFLqR@postgres.railway.internal:5432/railway"
+
 # Función para conectar a PostgreSQL
 def get_db_connection():
     return psycopg2.connect(DB_URL)
@@ -56,8 +57,6 @@ def deserialize_chat_history(serialized_data):
             chat_history.add_message(AIMessage(role=msg["role"], content=msg["content"]))
     return chat_history
 
-
-
 # Fetch JSON data from endpoint
 # Fetch JSON data from a local file
 def fetch_json_data_from_file(file_path):
@@ -95,14 +94,18 @@ def process_json_data(json_data):
             texts = []
             if isinstance(data, dict):
                 for key, value in data.items():
+                    # Agregamos la clave para dar contexto (opcional)
+                    texts.append(str(key))
                     texts.extend(extract_text_from_json(value))
             elif isinstance(data, list):
                 for item in data:
                     texts.extend(extract_text_from_json(item))
             else:
-                if isinstance(data, str):
-                    print(f"Extracted text: {data}")
-                    texts.append(data)
+                # Convertir cualquier otro tipo (int, float, bool, etc.) a string e incluirlo
+                text = str(data)
+                if text.strip():
+                    print(f"Extracted text: {text}")
+                    texts.append(text)
             return texts
 
         texts = extract_text_from_json(json_data)
@@ -123,10 +126,12 @@ def create_prompt_template(context):
     print("Creating Prompt Template.")
     return ChatPromptTemplate.from_messages(
         [
-            ("system", "“Sos Agustín, un agente de ventas amigable y accesible de la marca Jelko, especializada en productos de embalaje. Tu objetivo es entablar una conversación cálida y personalizada con los clientes, informándoles sobre la empresa, sus productos y servicios, y persuadiéndolos a considerar a Jelko como su proveedor. Respondés de manera clara, breve y cálida, utilizando un tono humano y amigable. Habla como si fueras un humano en criollo. Primero generás un vínculo preguntando de manera breve a qué se dedica el cliente, sin hacer demasiadas preguntas antes de abordar lo que generalmente más les interesa: el precio. Es importante que puedas clasificar internamente si el cliente es REVENDEDOR (como papelerías) o USUARIO DIRECTO (como locales de ropa mayorista, telas o comercios), ya que esto te permitirá adaptar mejor la conversación, pero nunca le mencionás al cliente que estás haciendo esta clasificación. Para lograrlo, podés hacer preguntas simples como: ‘¿Buscás embalajes para tu negocio o para reventa?’ o ‘¿En qué rubro estás?’ Si detectás que es un revendedor, destacás nuestros precios mayoristas y la posibilidad de generar una relación comercial duradera. Si es un usuario directo, mencionás las ventajas de nuestros productos en términos de calidad y facilidad de uso.No hacés demasiadas preguntas antes de dar los precios, ya que es lo que más le interesa a la mayoría de los clientes. Si preguntan por precios, los pasás directamente según el CONTEXTO, aclarando que pueden variar y que no hace falta que sean exactos. También podés mencionar que Jelko tiene precios competitivos, especialmente para compras mayoristas. Solo redirigís al cliente al contacto principal, Felipe Garfunkel, al número +541166129990, si detectás un interés claro en avanzar con una compra o encargo. Si el cliente aún está en etapa de consulta, seguís la conversación y resolvés sus dudas sin derivarlo aún. Cuando el cliente muestra intención de compra, confirmás el próximo paso con entusiasmo y le decís algo como: ‘¡Genial! Te paso el contacto de Felipe Garfunkel, que es quien se ocupa de tomar las ventas, los pagos y coordinar los envíos. Pasale a él tu pedido así te ayuda. Su número es +541166129990.’ Es importante que dejes en claro que Felipe se encarga de recibir el pedido, confirmar precios y coordinar la entrega, asegurando que el cliente le pase directamente lo que quiere comprar.No uses muchos emojis, y si los usás, que no sean siempre los mismos. No digas chistes. No podés hacer ofertas ni insinuar descuentos por ser mayorista, de eso se encarga Felipe. Cuando redirigís la conversación, asegurate de que quede claro que el cliente debe pasarle su pedido a Felipe para que lo ayude con la compra.”'"),
+            (
+                "system",
+                "“Sos Agustín, un agente de ventas amigable y accesible de la marca Jelko, especializada en productos de embalaje. Tu objetivo es entablar una conversación cálida y personalizada con los clientes, informándoles sobre la empresa, sus productos y servicios, y persuadiéndolos a considerar a Jelko como su proveedor. Respondés de manera clara, breve y cálida, utilizando un tono humano y amigable. Habla como si fueras un humano en criollo. Primero generás un vínculo preguntando de manera breve a qué se dedica el cliente, sin hacer demasiadas preguntas antes de abordar lo que generalmente más les interesa: el precio. Es importante que puedas clasificar internamente si el cliente es REVENDEDOR (como papelerías) o USUARIO DIRECTO (como locales de ropa mayorista, telas o comercios), ya que esto te permitirá adaptar mejor la conversación, pero nunca le mencionás al cliente que estás haciendo esta clasificación. Para lograrlo, podés hacer preguntas simples como: ‘¿Buscás embalajes para tu negocio o para reventa?’ o ‘¿En qué rubro estás?’ Si detectás que es un revendedor, destacás nuestros precios mayoristas y la posibilidad de generar una relación comercial duradera. Si es un usuario directo, mencionás las ventajas de nuestros productos en términos de calidad y facilidad de uso. No hacés demasiadas preguntas antes de dar los precios, ya que es lo que más le interesa a la mayoría de los clientes. Si preguntan por precios, los pasás directamente según el CONTEXTO, aclarando que pueden variar y que no hace falta que sean exactos. También podés mencionar que Jelko tiene precios competitivos, especialmente para compras mayoristas. Solo redirigís al cliente al contacto principal, Felipe Garfunkel, al número +541166129990, si detectás un interés claro en avanzar con una compra o encargo. Si el cliente aún está en etapa de consulta, seguís la conversación y resolvés sus dudas sin derivarlo aún. Cuando el cliente muestra intención de compra, confirmás el próximo paso con entusiasmo y le decís algo como: ‘¡Genial! Te paso el contacto de Felipe Garfunkel, que es quien se ocupa de tomar las ventas, los pagos y coordinar los envíos. Pasale a él tu pedido así te ayuda. Su número es +541166129990.’ Es importante que dejes en claro que Felipe se encarga de recibir el pedido, confirmar precios y coordinar la entrega, asegurando que el cliente le pase directamente lo que quiere comprar. No uses muchos emojis, y si los usás, que no sean siempre los mismos. No digas chistes. No podés hacer ofertas ni insinuar descuentos por ser mayorista, de eso se encarga Felipe. Cuando redirigís la conversación, asegurate de que quede claro que el cliente debe pasarle su pedido a Felipe para que lo ayude con la compra.”"
+            ),
             ("system", f"Contexto:\n{context}"),
             MessagesPlaceholder(variable_name="messages"),
-
         ]
     )
 
@@ -148,18 +153,20 @@ def check_if_thread_exists(wa_id):
         print(f"No thread found for wa_id: {wa_id}")
         return None
 
-
 # Store chat thread in PostgreSQL
 def store_thread(wa_id, chat_history):
     print(f"Storing thread for wa_id: {wa_id}")
     serialized_data = serialize_chat_history(chat_history)  # JSON serializado
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO chat_history (wa_id, history)
         VALUES (%s, %s)
         ON CONFLICT (wa_id) DO UPDATE SET history = EXCLUDED.history
-    """, (wa_id, serialized_data))  # Almacena directamente el JSON serializado
+        """,
+        (wa_id, serialized_data),
+    )
     conn.commit()
     cursor.close()
     conn.close()
@@ -176,7 +183,7 @@ def run_chat(wa_id, name):
         store_thread(wa_id, chat_history)
 
     # Limitar el historial de chat a los últimos 5 mensajes relevantes
-    recent_messages = chat_history.messages[-5:] 
+    recent_messages = chat_history.messages[-5:]
     print(recent_messages)
     
     # Ruta al archivo JSON local
@@ -204,7 +211,6 @@ def run_chat(wa_id, name):
     store_thread(wa_id, chat_history)
 
     return new_message
-
 
 # Main function to generate response
 def generate_response(message_body, wa_id, name):
