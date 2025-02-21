@@ -164,6 +164,10 @@ import requests
 import logging
 from flask import current_app
 
+import requests
+import logging
+from flask import current_app
+
 def send_template_message(recipient, template_name, language_code="es", components=None):
     """
     Send a proactive WhatsApp message using a pre-approved template.
@@ -183,23 +187,25 @@ def send_template_message(recipient, template_name, language_code="es", componen
 
     # Payload para el mensaje de plantilla
     data = {
-    "messaging_product": "whatsapp",
-    "to": recipient,
-    "type": "template",
-    "template": {
-        "name": template_name,
-        "language": {"code": language_code}
+        "messaging_product": "whatsapp",
+        "to": recipient,
+        "type": "template",
+        "template": {
+            "name": template_name,
+            "language": {"code": language_code}
+        }
     }
-}
 
-# Solo agregar "components" si se proporciona correctamente
-if components:
-    if isinstance(components, list):  # Verifica que sea una lista
-        data["template"]["components"] = components
-    else:
-        print("⚠️ Error: 'components' no es una lista de objetos JSON válida.")
+    # Solo agregar "components" si se proporciona correctamente
+    if components:
+        if isinstance(components, list):  # Verifica que sea una lista
+            data["template"]["components"] = components
+        else:
+            print("⚠️ Error: 'components' no es una lista de objetos JSON válida.")
+            return None  # No continuar si hay un error en los components
 
-print(f"Payload corregido: {data}")  # Imprime el JSON antes de enviarlo
+    print(f"Payload corregido: {data}")  # Imprime el JSON antes de enviarlo
+
     try:
         response = requests.post(url, json=data, headers=headers, timeout=10)
         print(f"Respuesta HTTP: {response.status_code}, {response.text}")  # Imprime la respuesta exacta
