@@ -134,7 +134,7 @@ def send_messages():
 
     Returns:
         JSON response indicating success or failure.
-    """
+    """ 
     try:
         data = request.get_json()
 
