@@ -140,8 +140,9 @@ def send_messages():
 
         # Validar estructura del JSON
         phones = data.get("phones")
-        template_name = "hello_world"#agregar nombre template
-        components = "componentes"#agregar componentes
+        template_name = "hello_world"  # Nombre de la plantilla
+
+        components = None  # NO enviar componentes, ya que la plantilla no tiene placeholders
 
         if not phones or not template_name:
             return jsonify({"status": "error", "message": "Missing phones or template_name"}), 400
@@ -162,5 +163,4 @@ def send_messages():
     except Exception as e:
         logging.error(f"Error processing request: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
