@@ -140,7 +140,7 @@ def send_messages():
 
         # Validar estructura del JSON
         phones = data.get("phones")
-        template_name = "template name"#agregar nombre template
+        template_name = "hello_world"#agregar nombre template
         components = "componentes"#agregar componentes
 
         if not phones or not template_name:

@@ -160,6 +160,10 @@ def is_valid_whatsapp_message(body):
 
 
 
+import requests
+import logging
+from flask import current_app
+
 def send_template_message(recipient, template_name, language_code="es", components=None):
     """
     Send a proactive WhatsApp message using a pre-approved template.
@@ -177,7 +181,7 @@ def send_template_message(recipient, template_name, language_code="es", componen
 
     url = f"https://graph.facebook.com/{current_app.config['VERSION']}/{current_app.config['PHONE_NUMBER_ID']}/messages"
 
-    # Payload for the template message
+    # Payload para el mensaje de plantilla
     data = {
         "messaging_product": "whatsapp",
         "to": recipient,
@@ -188,19 +192,25 @@ def send_template_message(recipient, template_name, language_code="es", componen
         },
     }
 
-    # Add components if provided
+    # Agregar componentes si están presentes
     if components:
         data["template"]["components"] = components
 
+    print(f"Intentando enviar mensaje a {recipient} con la plantilla '{template_name}'")
+    print(f"Payload: {data}")  # Verifica la estructura del JSON antes de enviarlo
+
     try:
         response = requests.post(url, json=data, headers=headers, timeout=10)
+        print(f"Respuesta HTTP: {response.status_code}, {response.text}")  # Imprime la respuesta exacta
         response.raise_for_status()
         logging.info(f"Template message sent to {recipient}.")
         return response.json()
     except requests.RequestException as e:
         logging.error(f"Failed to send template message to {recipient}: {e}")
+        print(f"Error enviando mensaje: {e}")  # Muestra el error en consola
+        if response is not None:
+            print(f"Respuesta de WhatsApp: {response.text}")  # Muestra detalles del error si hay respuesta
         return None
-
 
 
 
