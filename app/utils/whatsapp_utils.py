@@ -195,7 +195,7 @@ def send_template_message(recipient, template_name, language_code="es", componen
             "language": {"code": language_code}
         }
     }
-
+    
     # Solo agregar "components" si se proporciona correctamente
     if components:
         if isinstance(components, list):  # Verifica que sea una lista
