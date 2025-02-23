@@ -168,7 +168,7 @@ import requests
 import logging
 from flask import current_app
 
-def send_template_message(recipient, template_name, language_code="en_US", components=None):
+def send_template_message(recipient, template_name, language_code="es", components=None):
     """
     Send a proactive WhatsApp message using a pre-approved template.
 
