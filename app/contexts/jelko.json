@@ -29,14 +29,14 @@
       {
           "nombre": "Cinta frágil 48x90/48x40",
           "presentaciones": [
-              { "dimensiones": "48x40", "caja": 36, "precio_unitario": 850 },
-              { "dimensiones": "48x90", "caja": 36, "precio_unitario": 1700 }
+              { "dimensiones": "48x40", "precio_caja": 30600, "caja": 36, "precio_unitario": 850 },
+              { "dimensiones": "48x90", "precio_caja": 61200, "caja": 36, "precio_unitario": 1700 }
           ]
       },
       {
           "nombre": "Cinta ancha 72x80 transparente",
           "presentaciones": [
-              { "caja": 48, "precio_unitario": 1200 }
+              { "caja": 48, "precio_caja": 57600, "precio_unitario": 1200 }
           ]
       },
       {
