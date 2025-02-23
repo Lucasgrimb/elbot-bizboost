@@ -15,13 +15,13 @@
               {
                   "cantidad": "Bulto de 72 unidades",
                   "precios": [
-                      { "cantidad": "1 caja", "precio": 79000, "precio_unitario": 1097 },
-                      { "cantidad": "10 cajas", "precio": 60480, "precio_unitario": 840 },
-                      { "cantidad": "50 cajas", "precio": 56880, "precio_unitario": 790 }
+                      { "cantidad": "1 caja", "precio": 79000, precio_caja": 79000, "precio_unitario": 1097 },
+                      { "cantidad": "10 cajas", "precio": 604800, "precio_caja: 60480", "precio_unitario": 840 },
+                      { "cantidad": "50 cajas","precio": 2844000, "precio_caja": 56880, "precio_unitario": 790 }
                   ],
                   "precio_reventa": [
-                      { "cantidad": "10 cajas", "precio_unitario": 750 },
-                      { "cantidad": "50 cajas", "precio_unitario": 750 }
+                      { "cantidad": "10 cajas", "precio": 540000, "precio_caja": 54000, "precio_unitario": 750 },
+                      { "cantidad": "50 cajas", "precio": 2700000, "precio_caja": 54000, "precio_unitario": 750 }
                   ]
               }
           ]
