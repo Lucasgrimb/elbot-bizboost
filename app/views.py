@@ -140,7 +140,7 @@ def send_messages():
 
         # Validar estructura del JSON
         phones = data.get("phones")
-        template_name = "mensaje_bienvenida_jelko"  # Nombre de la plantilla
+        template_name = "jelko_prueba_plantilla"  # Nombre de la plantilla
 
         components = None  # NO enviar componentes, ya que la plantilla no tiene placeholders
 
