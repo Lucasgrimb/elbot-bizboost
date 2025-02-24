@@ -1,11 +1,12 @@
 {
-  "nombre_empresa": "JELKO",
-  "ubicacion": "Lafayette 1735, Barracas",
-  "descripcion_pyme": "Venta mayorista de productos de embalaje.",
-  "contacto": {
+    "nombre_empresa": "JELKO",
+    "ubicacion": "Lafayette 1735, Barracas",
+    "descripcion_pyme": "Venta mayorista de productos de embalaje.",
+    "contacto": {
       "nombre": "Felipe Garfunkel",
       "posicion": "Dueño",
       "email": "jelkoembalaje@gmail.com",
+<<<<<<< Updated upstream
       "telefono": "+541125069266"
   },
   "productos_servicios": [
@@ -38,65 +39,108 @@
           "presentaciones": [
               { "caja": 48, "precio_caja": 57600, "precio_unitario": 1200 }
           ]
+=======
+      "telefono": "+5491156350912"
+    },
+    "productos_servicios": [
+      {
+        "nombre": "Cinta de embalar 48 milímetros x 80 metros Marrón y transparente",
+        "presentaciones": [
+          {
+            "cantidad": "Bulto de 72 unidades",
+            "precios": [
+              { "cantidad": "1 caja", "precio": 79000, "precio_unitario": 1097 },
+              { "cantidad": "10 cajas", "precio": 60480, "precio_unitario": 840 },
+              { "cantidad": "50 cajas", "precio": 56880, "precio_unitario": 790 }
+            ],
+            "precio_reventa": [
+              { "cantidad": "10 cajas", "precio_unitario": 750 },
+              { "cantidad": "50 cajas", "precio_unitario": 750 }
+            ]
+          }
+        ]
       },
       {
-          "nombre": "Film stretch 50 centímetros con y sin mango",
-          "presentaciones": [
-              { "tipo": "Cristal", "precio_kg": 1950, "precio_reventa": 1750 },
-              { "tipo": "Negro", "precio_kg": 2150, "precio_reventa": 1850 }
-          ]
+        "nombre": "Cinta frágil 48x90/48x40",
+        "presentaciones": [
+          { "dimensiones": "48x40", "caja": 36, "precio_unitario": 850 },
+          { "dimensiones": "48x90", "caja": 36, "precio_unitario": 1700 }
+        ]
       },
       {
-          "nombre": "Film 10 centímetros Negro y Cristal",
-          "presentaciones": [
-              { "tipo": "Cristal", "precio_unitario": 1100 },
-              { "tipo": "Negro", "precio_unitario": 1200 }
-          ]
+        "nombre": "Cinta ancha 72x80 transparente",
+        "presentaciones": [
+          { "caja": 48, "precio_unitario": 1200 }
+        ]
+>>>>>>> Stashed changes
       },
       {
-          "nombre": "Film sin cono (corelees)",
-          "precio_kg": 2700
+        "nombre": "Film stretch 50 centímetros con y sin mango",
+        "presentaciones": [
+          { "tipo": "Cristal", "precio_kg": 1950, "precio_reventa": 1750 },
+          { "tipo": "Negro", "precio_kg": 2150, "precio_reventa": 1850 }
+        ]
+      },
+      {
+        "nombre": "Film 10 centímetros Negro y Cristal",
+        "presentaciones": [
+          { "tipo": "Cristal", "precio_unitario": 1100 },
+          { "tipo": "Negro", "precio_unitario": 1200 }
+        ]
+      },
+      {
+        "nombre": "Film sin cono (corelees)",
+        "precio_kg": 2700
+      },
+      {
+        "nombre": "Bolsas e-commerce",
+        "presentaciones": [
+          { "tamaño": "N1 20x30+4", "precio_unitario": 36 },
+          { "tamaño": "N2 30x41+4", "precio_unitario": 63 },
+          { "tamaño": "N3 42x54+4", "precio_unitario": 98 },
+          { "tamaño": "25x35+4", "precio_unitario": 44 }
+        ]
       }
-  ],
-  "opciones_pago": ["Transferencia", "Efectivo"],
-  "garantias_politicas_devolucion": "30 días de garantía",
-  "entrega": {
+    ],
+    "opciones_pago": ["Transferencia", "Efectivo"],
+    "garantias_politicas_devolucion": "30 días de garantía",
+    "entrega": {
       "caba": "Envíos sin costo",
       "interior": "Llevamos sin costo a los expresos",
       "retiro": "Se puede retirar en el depósito ubicado en Barracas, CABA"
-  },
-  "clientes_habituales": [
+    },
+    "clientes_habituales": [
       "Papeleras",
       "Negocios mayoristas",
       "Distribuidoras",
       "Indumentaria",
       "Transporte de mudanzas"
-  ],
-  "beneficios": [
+    ],
+    "beneficios": [
       "Excelentes precios ya que somos importadores directos."
-  ],
-  "competencia": [
+    ],
+    "competencia": [
       {
-          "nombre": "Meraki",
-          "ventajas": ["Generar un vínculo con el cliente", "Mejores precios", "Envíos sin costo"]
+        "nombre": "Meraki",
+        "ventajas": ["Generar un vínculo con el cliente", "Mejores precios", "Envíos sin costo"]
       },
       {
-          "nombre": "MYL Embalaje",
-          "ventajas": ["Generar un vínculo con el cliente", "Mejores precios", "Envíos sin costo"]
+        "nombre": "MYL Embalaje",
+        "ventajas": ["Generar un vínculo con el cliente", "Mejores precios", "Envíos sin costo"]
       }
-  ],
-  "zonas_venta": "Toda Argentina",
-  "proceso_venta": [
+    ],
+    "zonas_venta": "Toda Argentina",
+    "proceso_venta": [
       "Presentarse al cliente y preguntar su nombre.",
       "Consultar a qué se dedica y qué cantidades consume.",
       "Enviar precios relevantes dependiendo si es revendedor o consumidor.",
       "Confirmar la venta.",
       "Recontactar al cliente un mes después para verificar necesidades de reposición."
-  ],
-  "cliente_potencial": {
+    ],
+    "cliente_potencial": {
       "indicadores": [
-          "Se muestra interesado y hace preguntas frecuentes.",
-          "Preguntas como: ¿Hacen envíos? ¿Qué medios de pago aceptan? ¿Dónde están ubicados? ¿Es más IVA o IVA incluido? ¿Precio por cantidad? ¿Cuál es el mínimo de compra?"
+        "Se muestra interesado y hace preguntas frecuentes.",
+        "Preguntas como: ¿Hacen envíos? ¿Qué medios de pago aceptan? ¿Dónde están ubicados? ¿Es más IVA o IVA incluido? ¿Precio por cantidad? ¿Cuál es el mínimo de compra?"
       ]
+    }
   }
-}
